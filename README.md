@@ -1,5 +1,6 @@
 # FaceDetectionApp
-## App for face detection based on @HashtagProgramacao, @canalsandeco and the one and only @NicholasRenotte. ## Project team
+## App for face detection based on @HashtagProgramacao, @canalsandeco and the one and only @NicholasRenotte. 
+## Project team
  * Denis Takenaka
  * Eduarda Escouto
  * Carlos Moreira

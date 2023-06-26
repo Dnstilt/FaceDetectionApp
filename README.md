@@ -1,6 +1,7 @@
 # FaceDetectionApp
+![image](https://github.com/Dnstilt/FaceDetectionApp/assets/79464636/c2181a5f-c31f-4a77-9c57-4937c1e59849)
 ## App for face detection based on @HashtagProgramacao, @canalsandeco and the one and only @NicholasRenotte. 
-## Project team
+### Project team
  * Denis Takenaka
  * Eduarda Escouto
  * Carlos Moreira

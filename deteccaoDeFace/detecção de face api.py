@@ -118,9 +118,9 @@ while cap.isOpened():
     #Seta tecla para coleta
     if cv2.waitKey(1) & 0XFF == ord('p'):q
         #Criando caminho único do arquivo    
-        imgname = os.path.join(POS_PATH, '{}.jpg'.format(uuid.uuid1()))
+    imgname = os.path.join(POS_PATH, '{}.jpg'.format(uuid.uuid1()))
         #Gravando positive image
-        cv2.imwrite(imgname, frame)   
+    cv2.imwrite(imgname, frame)   
      
     #Mostrando imagem
     cv2.imshow('Image Collection', frame)

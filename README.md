@@ -1,7 +1,17 @@
 # FaceDetectionApp
 App for face detection based on @HashtagProgramacao, @canalsandeco and the one and only @NicholasRenotte.
+> Status: Developing
+ ## Project team
+ * Denis Takenaka
+ * Eduarda Escouto
+ * Carlos Moreira
+ * Mateus Nunes
+ * Lucas Malfatti
+
 
   App project made for ADS curse att Unisenai first semester,we start looking into turorial  @HastagProgramacao and them we go to @canalsandeco for getting more informations and a more complete code. But definitely @NicholasRenotte was the answer for what we need. 
+
+ 
 
 Data base for negative faces.  http://vis-www.cs.umass.edu/lfw/ 
 Siamese model explanation https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf

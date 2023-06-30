@@ -1,50 +1,22 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[11]:
-
-
-#Instalando dependencias
-
-
-# In[31]:
-
-
-get_ipython().system('pip install tensorflow opencv-python matplotlib')
-
-
-# In[1]:
-
 
 #Importando
+from distutils.sysconfig import get_python_inc
 import cv2 #Opencv
 import os #Acessar e manipular diretórios e arquivos 
 import random
 import numpy as np #Para trabalhar com diferentes tipos de array
 from matplotlib import pyplot as plt #Plotando visualizações de dados
+from sysconfig import get_python_version
+
 
 # Importando tensorflow dependencies - Functional API
-from tensorflow.keras.models import Model 
+from keras.models import Model 
 #Model(inputs=[inputimage, verificationimage], outputs =[1, 0])
-from tensorflow.keras.layers import Layer, Conv2D, Dense, MaxPooling2D, Input, Flatten
+from keras.layers import Layer, Conv2D, Dense, MaxPooling2D, Input, Flatten
 #Os modelos precisam de diferentes camadas e para isso servem os imports
 import tensorflow as tf
-#
 
 
-# In[3]:
-
-
-#Ajustando uso da memória da gpu para não dar erros
-#import tensorflow.compat.v1 as tf
-#tf.disable_v2_behavior()
-
-#config = tf.ConfigProto()
-#config.gpu_options.allow_growth=True
-#sess = tf.Session(config=config)
-
-
-# In[2]:
 
 
 #Criando caminhos para os diretórios 
@@ -53,50 +25,28 @@ NEG_PATH = os.path.join('data', 'negative')
 ANC_PATH = os.path.join('data', 'anchor')
 
 
-# In[22]:
-
-
 #Criando os diretórios
 os.makedirs(POS_PATH)
 os.makedirs(NEG_PATH)
 os.makedirs(ANC_PATH)
 
 
-# In[13]:
-
-
 #Coletando os dados http://vis-www.cs.umass.edu/lfw/
 #Descomprimindo dados
-get_ipython().system('tar -xf lfw.tgz')
-
-
-# In[14]:
-
 
 #Movendo os arquivos de imagens para o negative
-for directory in os.listdir('lfw'): 
-    for file in os.listdir(os.path.join('lfw', directory)):
-        EX_PATH = os.path.join('lfw', directory, file)
-        NEW_PATH = os.path.join(NEG_PATH, file)
-        os.replace(EX_PATH, NEW_PATH)
-
-
-# In[3]:
-
+##for directory in os.listdir('lfw'): 
+ ##   for file in os.listdir(os.path.join('lfw', directory)):
+  ##      EX_PATH = os.path.join('lfw', directory, file)
+   ##     NEW_PATH = os.path.join(NEG_PATH, file)
+  ##      os.replace(EX_PATH, NEW_PATH)
 
 #Coletando as positive e anchor fotos.
 #biblioteca que gera nomes únicos para cada imagem
 import uuid
 
 
-# In[4]:
-
-
 os.path.join(ANC_PATH, '{}.jpg'.format(uuid.uuid1()))
-
-
-# In[5]:
-
 
 #Conectando com a webcam
 cap = cv2.VideoCapture(0)
@@ -135,10 +85,6 @@ cap.release()
 cv2.destroyAllWindows()        
         
 
-
-# In[18]:
-
-
 #Aumento no numero de arquivos
 def data_aug(img):
     data = []
@@ -153,16 +99,6 @@ def data_aug(img):
         data.append(img)
     
     return data
-
-
-# In[ ]:
-
-
-
-
-
-# In[6]:
-
 
 import os
 import uuid
@@ -184,13 +120,9 @@ for file_name in os.listdir(os.path.join(ANC_PATH)):
         cv2.imwrite(os.path.join(ANC_PATH, '{}.jpg'.format(uuid.uuid1())), image.numpy())
 
 
-# In[ ]:
 
 
 #Lendo e preprocessando imagens
-
-
-# In[7]:
 
 
 #Padroniza as imagens em .jpg
@@ -199,19 +131,12 @@ positive = tf.data.Dataset.list_files(POS_PATH+'\*.jpg').take(1500)
 negative = tf.data.Dataset.list_files(NEG_PATH+'\*.jpg').take(1500)
 
 
-# In[8]:
-
 
 dir_test = anchor.as_numpy_iterator()
 
 
-# In[9]:
-
 
 print(dir_test.next())
-
-
-# In[14]:
 
 
 #Preprocessando
@@ -232,31 +157,12 @@ def preprocess(file_path):
     return img
 
 
-# In[16]:
 
 
-img = preprocess('data\\anchor\\e85742a5-0e29-11ee-b7fb-506313fe0681.jpg')
 
 
-# In[17]:
 
-
-preprocess('data\\anchor\\e85742a5-0e29-11ee-b7fb-506313fe0681.jpg')
-
-
-# In[18]:
-
-
-plt.imshow(img)
-
-
-# In[19]:
-
-
-dataset.map(preprocess)
-
-
-# In[20]:
+##dataset.map(preprocess)
 
 
 #Criando dataset nomeado 
@@ -266,8 +172,6 @@ positives = tf.data.Dataset.zip((anchor, positive, tf.data.Dataset.from_tensor_s
 negatives = tf.data.Dataset.zip((anchor, negative, tf.data.Dataset.from_tensor_slices(tf.zeros(len(anchor)))))
 data = positives.concatenate(negatives)
 
-
-# In[21]:
 
 
 #Construindo o treino e partição do treino
@@ -437,13 +341,7 @@ class L1Dist(Layer):
 l1 = L1Dist()
 
 
-# In[47]:
 
-
-l1(anchor_embedding, validation_embedding)
-
-
-# In[42]:
 
 
 #Construindo o modelo Siamese
@@ -451,14 +349,14 @@ input_image = Input(name='input_img', shape=(105,105,3))
 validation_image = Input(name='validation_img', shape=(105,105,3))
 
 
-# In[44]:
+
 
 
 inp_embedding = embedding(input_image)
 val_embedding = embedding(validation_image)
 
 
-# In[45]:
+
 
 
 siamese_layer = L1Dist()
@@ -589,8 +487,6 @@ y
 # In[63]:
 
 
-get_ipython().run_line_magic('pinfo2', 'tf.losses.BinaryCrossentropy')
-
 
 # In[60]:
 
@@ -632,7 +528,7 @@ def train_step(batch):
 
 #Construindo o Training Loop
 # Import metric calculations
-from tensorflow.keras.metrics import Precision, Recall
+from keras.metrics import Precision, Recall
 
 
 # In[66]:
@@ -682,7 +578,7 @@ train(train_data, EPOCHS)
 
 #Avaliando o modelo
 #Importando os calculos da metrica
-from tensorflow.keras.metrics import Precision, Recall
+from keras.metrics import Precision, Recall
 
 
 # In[67]:

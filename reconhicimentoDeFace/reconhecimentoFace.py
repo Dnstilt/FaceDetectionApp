@@ -1,4 +1,4 @@
-
+#App que reconhece e delimita a face.
 import cv2
 import mediapipe as mp
 

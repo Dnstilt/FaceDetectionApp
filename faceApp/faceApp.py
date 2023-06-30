@@ -1,3 +1,4 @@
+# Aplicativo que faz a leitura da face e reconhece ou não.
 # Import kivy dependencies first
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout

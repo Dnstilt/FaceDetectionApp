@@ -1,12 +1,10 @@
-
+#Use o Jupter ou o colab e vá rodando os blocos de código um por vez. Troque o caminho dos arquivos para os do seu uso.
 #Importando
-from distutils.sysconfig import get_python_inc
 import cv2 #Opencv
 import os #Acessar e manipular diretórios e arquivos 
 import random
 import numpy as np #Para trabalhar com diferentes tipos de array
 from matplotlib import pyplot as plt #Plotando visualizações de dados
-from sysconfig import get_python_version
 
 
 # Importando tensorflow dependencies - Functional API
@@ -17,8 +15,7 @@ from keras.layers import Layer, Conv2D, Dense, MaxPooling2D, Input, Flatten
 import tensorflow as tf
 
 
-
-
+#Crie uma pasta data no mesmo diretório do projeto e coloque o caminho no 'data'
 #Criando caminhos para os diretórios 
 POS_PATH = os.path.join('data', 'positive')
 NEG_PATH = os.path.join('data', 'negative')
@@ -33,21 +30,24 @@ os.makedirs(ANC_PATH)
 
 #Coletando os dados http://vis-www.cs.umass.edu/lfw/
 #Descomprimindo dados
-
-#Movendo os arquivos de imagens para o negative
-##for directory in os.listdir('lfw'): 
- ##   for file in os.listdir(os.path.join('lfw', directory)):
-  ##      EX_PATH = os.path.join('lfw', directory, file)
-   ##     NEW_PATH = os.path.join(NEG_PATH, file)
-  ##      os.replace(EX_PATH, NEW_PATH)
+#Deve-se usar o http://vis-www.cs.umass.edu/lfw/lfw.tgz para baixar o arquivo de fotos.
+#Descomprimi o arquivo
+!tar -xf lfw.tgz
+#Movendo os arquivos de imagens de download para o negative. 
+for directory in os.listdir('lfw'): 
+   for file in os.listdir(os.path.join('lfw', directory)):
+        EX_PATH = os.path.join('lfw', directory, file)
+        NEW_PATH = os.path.join(NEG_PATH, file)
+        os.replace(EX_PATH, NEW_PATH)
 
 #Coletando as positive e anchor fotos.
-#biblioteca que gera nomes únicos para cada imagem
+#biblioteca que gera identificadores únicos para cada imagem
 import uuid
 
 
 os.path.join(ANC_PATH, '{}.jpg'.format(uuid.uuid1()))
 
+#Esta parte vai captar as imagems para treino do modelo.
 #Conectando com a webcam
 cap = cv2.VideoCapture(0)
 while cap.isOpened(): 
@@ -85,7 +85,7 @@ cap.release()
 cv2.destroyAllWindows()        
         
 
-#Aumento no numero de arquivos
+#Após capturar as imagens essa função trabalha as imagens para gerar variantes.
 def data_aug(img):
     data = []
     for i in range(9):
@@ -105,11 +105,8 @@ import uuid
 import numpy as np
 import tensorflow as tf
 
-
-# In[5]:
-
-
-#Ampliando o número de dados de 150 para 1500
+#Ampliando o número de dados
+#Deve-se repetir o for com POS_PATH
 for file_name in os.listdir(os.path.join(ANC_PATH)):
     img_path = os.path.join(ANC_PATH, file_name)
     img = cv2.imread(img_path)
@@ -120,26 +117,20 @@ for file_name in os.listdir(os.path.join(ANC_PATH)):
         cv2.imwrite(os.path.join(ANC_PATH, '{}.jpg'.format(uuid.uuid1())), image.numpy())
 
 
-
-
 #Lendo e preprocessando imagens
 
 
-#Padroniza as imagens em .jpg
+#Padroniza as imagens em .jpg e seleciona x números para serem usados 
 anchor = tf.data.Dataset.list_files(ANC_PATH+'\*.jpg').take(1500)
 positive = tf.data.Dataset.list_files(POS_PATH+'\*.jpg').take(1500)
 negative = tf.data.Dataset.list_files(NEG_PATH+'\*.jpg').take(1500)
 
-
-
+#Teste
 dir_test = anchor.as_numpy_iterator()
-
-
-
 print(dir_test.next())
 
 
-#Preprocessando
+#Preprocessando as imagens
 def preprocess(file_path):
     
     #Lendo imagem do file path
@@ -156,13 +147,7 @@ def preprocess(file_path):
     # Return image
     return img
 
-
-
-
-
-
-
-##dataset.map(preprocess)
+dataset.map(preprocess)
 
 
 #Criando dataset nomeado 
@@ -177,16 +162,9 @@ data = positives.concatenate(negatives)
 #Construindo o treino e partição do treino
 def preprocess_twin(input_img, validation_img, label):
     return(preprocess(input_img), preprocess(validation_img), label)
-
-
-# In[22]:
-
-
+ 
+#Teste
 data
-
-
-# In[23]:
-
 
 #construindo dataloader pipeline
 
@@ -194,94 +172,45 @@ data = data.map(preprocess_twin)
 data = data.cache()
 data = data.shuffle(buffer_size=10000)
 
-
-# In[24]:
-
-
 data
 
-
-# In[25]:
-
-
-#Training partition
+#Treinando partições
 train_data = data.take(round(len(data)*.7))#Pega uma porcentagem da partição 
 train_data = train_data.batch(16)
 train_data = train_data.prefetch(8)
 
-
-# In[26]:
-
-
+#Teste
 train_data
 
-
-# In[27]:
-
-
-#Testing partition
+#Testando partições
 test_data = data.skip(round(len(data)*.7))
 test_data = test_data.take(round(len(data)*.3))
 test_data = test_data.batch(16)
 test_data = test_data.prefetch(8)
 
 
-# In[28]:
-
-
 #Modelo de engenharia
-#Construindo as camadas de embeddig
+#Construindo as camadas de embeddig deeplearning
 inp = Input(shape=(105,105,3), name='input_image')
-
-
-# In[29]:
-
 
 c1 = Conv2D(64, (10,10), activation='relu')(inp)
 
-
-# In[30]:
-
-
 m1 = MaxPooling2D(64, (2,2), padding='same')(c1)
-
-
-# In[31]:
-
 
 c2 = Conv2D(128, (7,7), activation='relu')(m1)
 m2 = MaxPooling2D(64, (2,2), padding='same')(c2)
 
-
-# In[32]:
-
-
 c3 = Conv2D(128, (4,4), activation='relu')(m2)
 m3 = MaxPooling2D(64, (2,2), padding='same')(c3)
-
-
-# In[33]:
-
 
 c4 = Conv2D(256, (4,4), activation='relu')(m3)
 f1 = Flatten()(c4)
 d1 = Dense(4096, activation='sigmoid')(f1)
 
-
-# In[34]:
-
-
 mod= Model(inputs=[inp], outputs=[d1], name='embedding')
 
-
-# In[35]:
-
-
+#Teste
 mod.summary()
-
-
-# In[36]:
-
 
 def make_embedding(): 
     inp = Input(shape=(105,105,3), name='input_image')
@@ -306,21 +235,10 @@ def make_embedding():
     
     return Model(inputs=[inp], outputs=[d1], name='embedding')
 
-
-# In[37]:
-
-
 embedding = make_embedding()
 
-
-# In[38]:
-
-
+#Teste
 embedding
-
-
-# In[39]:
-
 
 #Construindo a camada distance
 #Siamese L1 Distance class
@@ -334,14 +252,7 @@ class L1Dist(Layer):
     def call(self, input_embedding, validation_embedding):
         return tf.math.abs(input_embedding - validation_embedding)#valor absoluto
 
-
-# In[40]:
-
-
 l1 = L1Dist()
-
-
-
 
 
 #Construindo o modelo Siamese
@@ -349,51 +260,21 @@ input_image = Input(name='input_img', shape=(105,105,3))
 validation_image = Input(name='validation_img', shape=(105,105,3))
 
 
-
-
-
 inp_embedding = embedding(input_image)
 val_embedding = embedding(validation_image)
 
 
-
-
-
 siamese_layer = L1Dist()
-
-
-# In[48]:
-
 
 distances = siamese_layer(inp_embedding, val_embedding)
 
-
-# In[49]:
-
-
 classifier = Dense(1, activation='sigmoid')(distances)
-
-
-# In[50]:
-
 
 classifier
 
-
-# In[51]:
-
-
 siamese_network = Model(inputs=[input_image, validation_image], outputs=classifier, name='SiameseNetwork')
 
-
-# In[52]:
-
-
 siamese_network.summary()
-
-
-# In[53]:
-
 
 def make_siamese_model(): 
     
@@ -414,28 +295,13 @@ def make_siamese_model():
     return Model(inputs=[input_image, validation_image], outputs=classifier, name='SiameseNetwork')
 
 
-# In[54]:
-
-
 siamese_model = make_siamese_model()
-
-
-# In[55]:
-
 
 #Treinando
 #Setup loss e Optimizer
 binary_cross_loss = tf.losses.BinaryCrossentropy()
 
-
-# In[56]:
-
-
 opt = tf.keras.optimizers.Adam(1e-4) # 0.0001
-
-
-# In[57]:
-
 
 #Estabelecendo os checkpoints
 #Diretório para salvar os checkpoints
@@ -445,58 +311,21 @@ checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
 #Salvando o optimizer e o model
 checkpoint = tf.train.Checkpoint(opt=opt, siamese_model=siamese_model)
 
-
-# In[51]:
-
-
 #Costruiondo o Train Step Funcion
 #Faz a predição, calcula a perda, deriva os gradientes
 # e calcula os novos pesos e aplica 
 
-
-# In[58]:
-
-
 test_batch = train_data.as_numpy_iterator()
-
-
-# In[59]:
-
 
 batch_1 = test_batch.next()
 
-
-# In[60]:
-
-
 X = batch_1[:2]
-
-
-# In[61]:
-
 
 y = batch_1[2]
 
-
-# In[62]:
-
-
 y
 
-
-# In[63]:
-
-
-
-# In[60]:
-
-
 #Começamos a construir uma rede neural aqui
-
-
-# In[64]:
-
-
 @tf.function #compila o que está na função 
 def train_step(batch):
     
@@ -521,18 +350,10 @@ def train_step(batch):
         
     #REtorna as perdas
     return loss
-
-
-# In[65]:
-
-
+ 
 #Construindo o Training Loop
 # Import metric calculations
 from keras.metrics import Precision, Recall
-
-
-# In[66]:
-
 
 #Enquanto o train spet foca em um único batch(lote) o o loop aqui 
 #itera sobre todo o data set
@@ -560,55 +381,23 @@ def train(data, EPOCHS):
         if epoch % 10 == 0: 
             checkpoint.save(file_prefix=checkpoint_prefix)
 
-
-# In[67]:
-
-
 EPOCHS = 50
 
-
-# In[ ]:
-
-
 train(train_data, EPOCHS)
-
-
-# In[66]:
-
 
 #Avaliando o modelo
 #Importando os calculos da metrica
 from keras.metrics import Precision, Recall
 
-
-# In[67]:
-
-
 #Pegando umlote de dados
 test_input, test_val, y_true = test_data.as_numpy_iterator().next()
 
-
-# In[68]:
-
-
 y_hat = siamese_model.predict([test_input, test_val])
-
-
-# In[69]:
-
 
 #Pos processamento dos resultados
 [1 if prediction > 0.5 else 0 for prediction in y_hat ] #listcomprehensiom
 
-
-# In[70]:
-
-
 y_true
-
-
-# In[71]:
-
 
 #Calculando as metricas
 #Criando objeto métrico  
@@ -620,10 +409,6 @@ m.update_state(y_true, y_hat)
 #Retorno do Recall Result
 m.result().numpy()
 
-
-# In[72]:
-
-
 # Creating a metric object 
 m = Precision()
 
@@ -632,10 +417,6 @@ m.update_state(y_true, y_hat)
 
 # Return Recall Result
 m.result().numpy()
-
-
-# In[73]:
-
 
 r = Recall()
 p = Precision()
@@ -646,10 +427,6 @@ for test_input, test_val, y_true in test_data.as_numpy_iterator():
     p.update_state(y_true,yhat) 
 
 print(r.result().numpy(), p.result().numpy())
-
-
-# In[74]:
-
 
 #Visualizando dados
 #Setando tamanho da figura
@@ -666,78 +443,33 @@ plt.imshow(test_val[3])
 #Renderiza de forma mais limpa
 plt.show()
 
-
-# In[ ]:
-
-
 #Salvando o modelo
-
-
-# In[75]:
-
 
 # Save weights
 siamese_model.save('siamesemodelv2.h5')
 
-
-# In[76]:
-
-
 L1Dist
-
-
-# In[1]:
-
 
 # Reload model 
 siamese_model = tf.keras.models.load_model('siamesemodelv2.h5', 
                                    custom_objects={'L1Dist':L1Dist, 'BinaryCrossentropy':tf.losses.BinaryCrossentropy})
-
-
-# In[82]:
-
-
 # Make predictions with reloaded model
 siamese_model.predict([test_input, test_val])
 
-
-# In[79]:
-
-
 # View model summary
 siamese_model.summary()
-
-
-# In[ ]:
-
 
 #Real time teste
 #Verificacao
 #application_data\verification_images
 
-
-# In[83]:
-
-
 os.listdir(os.path.join('application_data', 'verification_images'))
 
-
-# In[84]:
-
-
 os.path.join('application_data', 'input_image', 'input_image.jpg')
-
-
-# In[85]:
-
 
 for image in os.listdir(os.path.join('application_data', 'verification_images')):
     validation_img = os.path.join('application_data', 'verification_images', image)
     print(validation_img)
-
-
-# In[86]:
-
 
 def verify(model, detection_threshold, verification_threshold):
     #Construindo array de resultados
@@ -760,10 +492,6 @@ def verify(model, detection_threshold, verification_threshold):
     
     return results, verified
 
-
-# In[89]:
-
-
 #Verificação Real time com OpenCV
 cap = cv2.VideoCapture(0)
 while cap.isOpened():
@@ -777,15 +505,15 @@ while cap.isOpened():
     # Verification trigger
     if cv2.waitKey(10) & 0xFF == ord('v'):
         # Save input image to application_data/input_image folder 
-#         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-#         h, s, v = cv2.split(hsv)
+         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+         h, s, v = cv2.split(hsv)
 
-#         lim = 255 - 10
-#         v[v > lim] = 255
-#         v[v <= lim] -= 10
+         lim = 255 - 10
+         v[v > lim] = 255
+         v[v <= lim] -= 10
         
-#         final_hsv = cv2.merge((h, s, v))
-#         img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+         final_hsv = cv2.merge((h, s, v))
+         img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
 
         cv2.imwrite(os.path.join('application_data', 'input_image', 'input_image.jpg'), frame)
         # Run verification
@@ -796,9 +524,3 @@ while cap.isOpened():
         break
 cap.release()
 cv2.destroyAllWindows()
-
-
-
-
-
-
